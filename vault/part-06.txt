@@ -1,0 +1,514 @@
+ DESIGN 4 OPTIONS, SIMPLEST FIRST\nOption 1, Minimal Moves: keep my current logic, fix the worst problems, fewest moves possible.\nOption 2, Clean Rebuild: a standard tidy structure rebuilt from what I actually have.\nOption 3, Full Overhaul: one opinionated system (PARA or job-based), still simple.\nOption 4, Universal Interface-Safe Plan: a plan that works even if the AI cannot directly browse local files and must rely on a provided folder-tree export.\nRules for all 4: max 7 top-level folders, max 3 levels deep, one explicit naming convention (case, separators, date format), and every existing folder and loose file gets a destination. Zero orphans. The options must be genuinely different, not one idea in 4 flavors.\n\nSTEP 4: SILENT TRIPLE CHECK\nBefore output, verify all 4 options account for 100 percent of what exists, every tree is internally consistent, counts match your claims, and the HTML has no placeholder text. Fix and re-verify. Do not show me this step.\n\nSTEP 5: DELIVER ONE HTML FILE\nGive me a single self-contained HTML file (all CSS inline, no external links or scripts) that I can save and open in a browser. In order:\n1. Comparison table: option name, top-level folders, number of moves, effort estimate, best for.\n2. Per option: the full proposed folder tree in monospace, the naming convention, a table mapping current location to new location, and a migration checklist of 10 steps or fewer, ordered so nothing breaks (shared folders last).\n3. Your recommendation and why, in 2 sentences.\nStyle: clean, minimal, generous white space, readable type, no decoration that does not help me decide.\n\nHARD RULES\nSimple beats clever. If a folder name needs explaining, rename it. Propose only; never touch the actual files until I approve an option.", placeholder: false },
+    ]
+  },
+];
+
+const GROUPS = [
+  { name: "Research & Answers", ids: ["devils-advocate", "research-red-team", "answer-from-sources", "step-back", "self-ask"] },
+  { name: "Check & Verify", ids: ["triple-verify-executor", "verify-blind", "adversarial-panel", "independent-passes", "rubric-grade", "self-refine", "confidence-check", "automation-stress-test", "assumption-audit", "claude-design-audit"] },
+  { name: "Fix & Troubleshoot", ids: ["root-cause-excavator", "technical-error-decoder"] },
+  { name: "Plan & Decide", ids: ["clarify-gate", "meta-prompt-rewrite", "pattern-composer-stack", "plan-and-solve", "branch-backtrack", "inversion-audit", "pre-mortem", "pre-mortem-quick", "second-order-map"] },
+  { name: "Workflow & Productivity", ids: ["high-leverage-audit", "workflow-optimizer", "first-principles-rebuild", "chief-custom-instructions", "chief-system-prompt", "chief-morning-brief", "chief-eod-wrap", "chief-weekly-review", "folder-overhaul"] },
+];
+
+// ── STATE ----
+const STORAGE_KEY = 'prompt-vault-v1';
+let activeIndex = -1;
+let pendingReset = null; // 'all' or index number
+
+function loadStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveStorage(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// Returns the saved editable texts for a prompt, or defaults
+function getPromptTexts(idx) {
+  const store = loadStorage();
+  return store[PROMPTS[idx].id] || null;
+}
+
+function savePromptTexts(idx, texts) {
+  const store = loadStorage();
+  store[PROMPTS[idx].id] = texts;
+  saveStorage(store);
+}
+
+function clearPromptTexts(idx) {
+  const store = loadStorage();
+  delete store[PROMPTS[idx].id];
+  saveStorage(store);
+}
+
+function clearAllTexts() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+// ── SIDEBAR NAV ----
+function buildNav() {
+  const nav = document.getElementById('promptNav');
+  nav.innerHTML = '';
+  let num = 0;
+  GROUPS.forEach(g => {
+    const header = document.createElement('div');
+    header.className = 'nav-group';
+    header.textContent = g.name;
+    nav.appendChild(header);
+    g.ids.forEach(id => {
+      const i = PROMPTS.findIndex(p => p.id === id);
+      if (i < 0) return;
+      const p = PROMPTS[i];
+      const item = document.createElement('div');
+      item.className = 'nav-item';
+      item.dataset.index = i;
+      item.innerHTML = `<span class="nav-num">${String(num).padStart(2,'0')}</span><span class="nav-label">${p.title}</span>`;
+      item.addEventListener('click', () => selectPrompt(i));
+      nav.appendChild(item);
+      num++;
+    });
+  });
+}
+
+function updateNavActive(idx) {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', parseInt(el.dataset.index, 10) === idx);
+  });
+}
+
+// ── SEARCH ----
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const p = PROMPTS[parseInt(el.dataset.index, 10)];
+    const match = p.title.toLowerCase().includes(q) ||
+                  p.tag.toLowerCase().includes(q) ||
+                  p.subtitle.toLowerCase().includes(q) ||
+                  (p.explain || '') + ' ' + (p.match || '').toLowerCase().includes(q);
+    el.classList.toggle('hidden', q !== '' && !match);
+  });
+  document.querySelectorAll('.nav-group').forEach(h => {
+    let sib = h.nextElementSibling;
+    let any = false;
+    while (sib && sib.classList.contains('nav-item')) {
+      if (!sib.classList.contains('hidden')) { any = true; break; }
+      sib = sib.nextElementSibling;
+    }
+    h.classList.toggle('hidden', !any);
+  });
+});
+
+// ── RENDER PROMPT ----
+function selectPrompt(idx) {
+  activeIndex = idx;
+  const p = PROMPTS[idx];
+
+  // Hide welcome, show prompt view
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('promptView').style.display = 'block';
+  document.getElementById('copyAllBtn').classList.remove('hidden');
+
+  // Update top bar
+  document.getElementById('topBarTitle').textContent = p.title;
+
+  // Update meta
+  const tagEl = document.getElementById('promptTag');
+  tagEl.textContent = p.tag;
+  tagEl.className = `prompt-tag ${p.tagClass}`;
+  document.getElementById('promptTitle').textContent = p.title;
+  document.getElementById('promptSubtitle').textContent = p.subtitle;
+
+  const explainBox = document.getElementById('promptExplain');
+  if (explainBox) {
+    if (p.explain) {
+      explainBox.innerHTML = '<span class="explain-label">In plain English</span>';
+      const body = document.createElement('div');
+      body.textContent = p.explain;
+      explainBox.appendChild(body);
+      explainBox.style.display = 'block';
+    } else {
+      explainBox.style.display = 'none';
+    }
+  }
+
+  // Load saved texts
+  const saved = getPromptTexts(idx);
+  let editableIdx = 0;
+  const editableDefaults = p.blocks
+    .filter(b => b.type === 'editable')
+    .map(b => b.text);
+
+  const currentTexts = saved || editableDefaults;
+
+  // Render blocks
+  const area = document.getElementById('editorArea');
+  area.innerHTML = '';
+
+  let openGroup = null; // tracks current "group" div
+
+  p.blocks.forEach((block, bi) => {
+    if (block.type === 'divider') {
+      const d = document.createElement('div');
+      d.className = 'section-divider';
+      area.appendChild(d);
+      openGroup = null;
+      return;
+    }
+
+    if (block.type === 'static') {
+      const el = document.createElement('div');
+      el.className = 'block-static';
+      el.textContent = block.text;
+      area.appendChild(el);
+      openGroup = null;
+      return;
+    }
+
+    if (block.type === 'step') {
+      const el = document.createElement('div');
+      el.className = 'step-header';
+      el.innerHTML = `<span class="step-label">${block.label}</span>${block.title ? `<span class="step-title">${block.title}</span>` : ''}`;
+      area.appendChild(el);
+      openGroup = null;
+      return;
+    }
+
+    if (block.type === 'editable') {
+      const savedText = currentTexts[editableIdx] !== undefined
+        ? currentTexts[editableIdx]
+        : block.text;
+      const isPlaceholder = savedText === block.text && block.placeholder;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'block-editable';
+
+      const ta = document.createElement('textarea');
+      ta.value = savedText;
+      ta.dataset.editableIdx = editableIdx;
+      ta.dataset.blockIdx = bi;
+      ta.spellcheck = false;
+
+      if (isPlaceholder) ta.classList.add('is-placeholder');
+
+      // Auto-resize
+      ta.addEventListener('input', () => {
+        autoResize(ta);
+        // Remove placeholder style once user types
+        ta.classList.remove('is-placeholder');
+        persistCurrentPrompt();
+      });
+
+      ta.addEventListener('focus', () => {
+        if (ta.classList.contains('is-placeholder')) {
+          // Don't auto-clear — let user edit in place
+        }
+      });
+
+      const tag = document.createElement('span');
+      tag.className = 'placeholder-tag';
+      tag.textContent = block.placeholder ? 'Fill in' : 'Editable';
+
+      wrap.appendChild(ta);
+      wrap.appendChild(tag);
+      area.appendChild(wrap);
+
+      // Defer resize until rendered
+      requestAnimationFrame(() => autoResize(ta));
+
+      editableIdx++;
+    }
+  });
+
+  updateNavActive(idx);
+  showSaveIndicator('');
+}
+
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = (ta.scrollHeight) + 'px';
+}
+
+// ── PERSIST ----
+function persistCurrentPrompt() {
+  if (activeIndex < 0) return;
+  const texts = [];
+  document.querySelectorAll('#editorArea .block-editable textarea').forEach(ta => {
+    texts.push(ta.value);
+  });
+  savePromptTexts(activeIndex, texts);
+  showSaveIndicator('Saved');
+}
+
+function showSaveIndicator(msg) {
+  const el = document.getElementById('saveIndicator');
+  el.textContent = msg;
+  el.classList.toggle('visible', msg !== '');
+  if (msg) {
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.classList.remove('visible'); }, 2000);
+  }
+}
+
+// ── COPY PROMPT ----
+function buildFullPromptText() {
+  if (activeIndex < 0) return '';
+  const p = PROMPTS[activeIndex];
+  const textareas = document.querySelectorAll('#editorArea .block-editable textarea');
+  let taIdx = 0;
+  const parts = [];
+
+  p.blocks.forEach(block => {
+    if (block.type === 'static') {
+      parts.push(block.text);
+    } else if (block.type === 'step') {
+      parts.push(`\n${block.label}${block.title}`);
+    } else if (block.type === 'editable') {
+      const ta = textareas[taIdx];
+      if (ta) parts.push(ta.value);
+      taIdx++;
+    } else if (block.type === 'divider') {
+      parts.push('');
+    }
+  });
+
+  return parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('copyAllBtn').addEventListener('click', () => {
+  const text = buildFullPromptText();
+  if (!text) return;
+  copyToClipboard(text).then(() => showToast('Prompt copied to clipboard'));
+});
+
+document.getElementById('copyFinalBtn').addEventListener('click', () => {
+  const text = buildFullPromptText();
+  if (!text) return;
+  copyToClipboard(text).then(() => showToast('Prompt copied to clipboard'));
+});
+
+// ── RESET ----
+document.getElementById('resetSingleBtn').addEventListener('click', () => {
+  if (activeIndex < 0) return;
+  pendingReset = activeIndex;
+  document.getElementById('modalOverlay').style.display = 'flex';
+});
+
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  pendingReset = 'all';
+  document.getElementById('modalOverlay').style.display = 'flex';
+});
+
+document.getElementById('modalCancel').addEventListener('click', () => {
+  document.getElementById('modalOverlay').style.display = 'none';
+  pendingReset = null;
+});
+
+document.getElementById('modalConfirm').addEventListener('click', () => {
+  document.getElementById('modalOverlay').style.display = 'none';
+  if (pendingReset === 'all') {
+    clearAllTexts();
+    if (activeIndex >= 0) selectPrompt(activeIndex);
+    showToast('All prompts reset to defaults');
+  } else if (typeof pendingReset === 'number') {
+    clearPromptTexts(pendingReset);
+    selectPrompt(pendingReset);
+    showToast('Prompt reset to default');
+  }
+  pendingReset = null;
+});
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+    pendingReset = null;
+  }
+});
+
+// ── SIDEBAR TOGGLE ----
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const hamburger = document.getElementById('hamburger');
+
+sidebarToggle.addEventListener('click', () => {
+  sidebar.classList.add('collapsed');
+});
+
+hamburger.addEventListener('click', () => {
+  sidebar.classList.remove('collapsed');
+});
+
+// ── WELCOME CARD CLICKS ----
+function buildWelcome() {
+  const intro = document.getElementById('welcomeIntro');
+  if (intro) intro.innerHTML = PROMPTS.length + ' prompts in ' + GROUPS.length + ' groups, every one explained in plain English.<br>Pick a prompt from the sidebar, read the explanation, fill in the blanks, and copy.';
+  const grid = document.getElementById('welcomeGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  GROUPS.forEach(g => {
+    const label = document.createElement('div');
+    label.className = 'welcome-group-label';
+    label.textContent = g.name;
+    grid.appendChild(label);
+    g.ids.forEach(id => {
+      const i = PROMPTS.findIndex(p => p.id === id);
+      if (i < 0) return;
+      const p = PROMPTS[i];
+      const card = document.createElement('div');
+      card.className = 'welcome-card';
+      const tagSpan = document.createElement('span');
+      tagSpan.className = 'wc-tag';
+      tagSpan.textContent = p.tag;
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'wc-title';
+      titleDiv.textContent = p.title;
+      card.appendChild(tagSpan);
+      card.appendChild(titleDiv);
+      card.addEventListener('click', () => selectPrompt(i));
+      grid.appendChild(card);
+    });
+  });
+}
+buildWelcome();
+
+// ── INIT ----
+buildNav();
+
+</script>
+  
+<script>
+(function() {
+  var STOP = new Set(['i','a','an','the','to','my','me','of','and','for','it','this','that','is','are','on','in','do','can','you','your','want','need','help','with','make','get','have','be','what','how','so','we','at','or','from','by','up','out','into','about','was','will','would','like','please','some','something','they','them','when','then','than','just','really','use','using','one','way']);
+  var ID2GROUP = {};
+  GROUPS.forEach(function(g) { g.ids.forEach(function(id) { ID2GROUP[id] = g.name; }); });
+  var INDEX = PROMPTS.map(function(p, i) {
+    return {
+      i: i,
+      strong: ((p.match || '') + ' ' + p.title + ' ' + (p.tag || '')).toLowerCase(),
+      weak: ((p.subtitle || '') + ' ' + (p.explain || '')).toLowerCase()
+    };
+  });
+  function esc(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function tokens(q) {
+    return q.replace(/[^a-z0-9\s'-]/g, ' ').split(/\s+/).filter(function(t) { return t.length >= 3 && !STOP.has(t); });
+  }
+  function score(e, toks, raw) {
+    var sc = 0;
+    toks.forEach(function(t) {
+      var re = new RegExp('\\b' + esc(t));
+      if (re.test(e.strong)) sc += 6;
+      else if (re.test(e.weak)) sc += 2;
+    });
+    if (raw.length >= 8) {
+      if (e.strong.indexOf(raw) !== -1) sc += 10;
+      else if (e.weak.indexOf(raw) !== -1) sc += 5;
+    }
+    return sc;
+  }
+  function firstSentence(t) {
+    var m = (t || '').match(/^.*?[.!?](\s|$)/);
+    return m ? m[0].trim() : (t || '');
+  }
+  var askInput = document.getElementById('askInput');
+  var askResults = document.getElementById('askResults');
+  var currentTop = null;
+  function render(ranked) {
+    askResults.innerHTML = '';
+    if (!ranked.length) {
+      currentTop = null;
+      var d = document.createElement('div');
+      d.className = 'ask-empty';
+      d.textContent = 'No obvious match. Try different words, or browse the groups below.';
+      askResults.appendChild(d);
+      return;
+    }
+    currentTop = ranked[0].e.i;
+    ranked.forEach(function(r, k) {
+      var p = PROMPTS[r.e.i];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ask-card' + (k === 0 ? ' best' : '');
+      var top = document.createElement('div');
+      top.className = 'ask-card-top';
+      if (k === 0) {
+        var chip = document.createElement('span');
+        chip.className = 'ask-best-chip';
+        chip.textContent = 'BEST MATCH';
+        top.appendChild(chip);
+      }
+      var g = document.createElement('span');
+      g.className = 'ask-group';
+      g.textContent = ID2GROUP[p.id] || '';
+      top.appendChild(g);
+      b.appendChild(top);
+      var t = document.createElement('div');
+      t.className = 'ask-title';
+      t.textContent = p.title;
+      b.appendChild(t);
+      var w = document.createElement('div');
+      w.className = 'ask-why';
+      w.textContent = firstSentence(p.explain);
+      b.appendChild(w);
+      b.addEventListener('click', function() { selectPrompt(r.e.i); });
+      askResults.appendChild(b);
+    });
+  }
+  function runMatch() {
+    var raw = askInput.value.trim().toLowerCase();
+    var toks = tokens(raw);
+    if (!toks.length) { askResults.innerHTML = ''; currentTop = null; return; }
+    var ranked = [];
+    for (var k = 0; k < INDEX.length; k++) {
+      var sc = score(INDEX[k], toks, raw);
+      if (sc >= 6) ranked.push({ e: INDEX[k], s: sc });
+    }
+    ranked.sort(function(a, b) { return b.s - a.s; });
+    render(ranked.slice(0, 4));
+  }
+  askInput.addEventListener('input', runMatch);
+  askInput.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) {
+      ev.preventDefault();
+      if (currentTop !== null) selectPrompt(currentTop);
+    }
+  });
+  window.askMatch = function(q) {
+    askInput.value = q;
+    runMatch();
+    return Array.prototype.map.call(askResults.querySelectorAll('.ask-title'), function(n) { return n.textContent; });
+  };
+  document.getElementById('welcomeIntro').innerHTML = '35 prompts in 5 groups, every one explained in plain English.<br>Describe what you need in the box, or browse the groups below.';
+})();
+</script>
+</body>
+</html>
+
