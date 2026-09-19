@@ -1,4 +1,9 @@
-ton class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</button>
+class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">&#9670;</span>
+          <span class="logo-text">Prompt Vault</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</button>
       </div>
 
       <div class="search-wrap">
@@ -83,12 +88,12 @@ ton class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</
     </div>
 
     <script>
-/* ============================================================
+/* ====
    PROMPT VAULT — script.js
    All 11 prompts, localStorage persistence, copy, search, reset
-   ============================================================ */
+   ==== */
 
-// ── DATA ─────────────────────────────────────────────────────
+// ── DATA ----
 // Each prompt is an array of "blocks":
 //   { type: 'static', text: '...' }           — read-only intro text
 //   { type: 'step', label: 'STEP 1', title: '— TITLE' }  — step header (read-only)
@@ -96,7 +101,7 @@ ton class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</
 //   { type: 'divider' }                        — visual gap
 
 const PROMPTS = [
-  // ── 0. DEVIL'S ADVOCATE ──────────────────────────────────
+  // ── 0. DEVIL'S ADVOCATE ----
   {
     id: 'devils-advocate',
     match: "quick answer gut check second opinion is this a good idea should i challenge my thinking poke holes disagree argue counterargument sanity check opinion advice recommendation everyday question stress test my idea",
@@ -120,7 +125,7 @@ const PROMPTS = [
     ]
   },
 
-  // ── 1. AUTOMATION STRESS TEST ────────────────────────────
+  // ── 1. AUTOMATION STRESS TEST ----
   {
     id: 'automation-stress-test',
     match: "automation zap make workflow bot agent scheduled task breaks edge cases what could go wrong test scenarios stress test failure modes weird inputs",
@@ -144,7 +149,7 @@ const PROMPTS = [
     ]
   },
 
-  // ── 2. ROOT CAUSE EXCAVATOR ──────────────────────────────
+  // ── 2. ROOT CAUSE EXCAVATOR ----
   {
     id: 'root-cause-excavator',
     match: "why does this keep happening recurring problem root cause underlying issue keeps breaking failing repeat failure pattern dig deeper past the symptom five whys",
@@ -171,7 +176,7 @@ const PROMPTS = [
     ]
   },
 
-  // ── 3. INVERSION AUDIT ───────────────────────────────────
+  // ── 3. INVERSION AUDIT ----
   {
     id: 'inversion-audit',
     match: "how would this fail on purpose guarantee failure what would ruin this avoid mistakes think backwards flip it what not to do",
@@ -195,7 +200,7 @@ const PROMPTS = [
     ]
   },
 
-  // ── 4. SECOND-ORDER CONSEQUENCES MAP ────────────────────
+  // ── 4. SECOND-ORDER CONSEQUENCES MAP ----
   {
     id: 'second-order-map',
     match: "consequences ripple effects downstream impact and then what long term side effects knock on effects of a decision unintended",
@@ -219,7 +224,7 @@ const PROMPTS = [
     ]
   },
 
-  // ── 5. TECHNICAL ERROR DECODER ───────────────────────────
+  // ── 5. TECHNICAL ERROR DECODER ----
   {
     id: 'technical-error-decoder',
     match: "error message formula broken excel google sheets code script bug crash not working wont work troubleshoot fix explain this error debug what went wrong technical",
@@ -233,7 +238,4 @@ const PROMPTS = [
       { type: 'step', label: 'ERROR MESSAGE / LOG ENTRY', title: '' },
       { type: 'editable', text: '[PASTE THE COMPLETE ERROR — include error codes, file paths, stack traces, event IDs, and any surrounding log context]', placeholder: true },
       { type: 'step', label: 'CONTEXT', title: '' },
-      { type: 'editable', text: '- What I was doing when it occurred: [exact action]\n- Software/system: [name and version]\n- Operating system: [OS and version]\n- When it started: [first occurrence and any changes made right before]\n- Frequency: [every time / intermittent / only under specific conditions]\n- What I\'ve already tried: [steps taken and their results]', placeholder: true },
-      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
-      { type: 'step', label: 'STEP 1', title: '— PLAIN-ENGLISH EXPLANATION' },
-      { type: 'editable', text: 'Tell me what this error actually means in plain language — not the textbook definition, but what is happening in my specific system right now. What component failed, why, and what it was trying to 
+      { type: 'editable', text: '- What I was doing when it occurred: [exact action]\n- Software/system: [name and version]\n- Operating system: [OS and version]\n- When it started: [first occurrence 
