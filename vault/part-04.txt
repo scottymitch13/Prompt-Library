@@ -1,0 +1,178 @@
+ },
+      { type: 'step', label: "PHASE 5", title: "— DELIVER" },
+      { type: 'editable', text: "Give me the finished result in the form I said I would judge it in. Then, briefly: what you are confident about, what you are not, and what one piece of information would most change your answer. Do not tell me the process was thorough. Show me what the checks caught and what they cost.", placeholder: false },
+    ]
+  },
+  {
+    id: "meta-prompt-rewrite",
+    match: "write a better prompt improve my prompt help me ask the right way rewrite my request prompt engineering make instructions clearer turn rough idea into a prompt",
+    title: "Meta-Prompt Rewrite",
+    subtitle: "Paste a lazy one-liner. The AI writes the prompt you should have written, then runs that instead.",
+    explain: "For when you cannot be bothered to write a good prompt. Paste your rough request and the AI first turns it into the detailed prompt you should have written, tells you what it had to assume, then executes that better version instead of your original wording. The cheapest quality upgrade in this library: one blank, no other effort.",
+    tag: "Planning",
+    tagClass: "tag-planning",
+    blocks: [
+      { type: 'editable', text: "[PASTE YOUR ROUGH REQUEST HERE, EVEN ONE SENTENCE IS FINE]", placeholder: true },
+      { type: 'editable', text: "Before you do any work on the request above: rewrite it as the detailed prompt I should have written. Infer the context I left out. List the assumptions you had to make, and mark the single assumption that would waste the most of my time if it is wrong. Keep the rewrite to 6 lines or less. Then execute the rewritten version, not my original wording.", placeholder: false },
+    ]
+  },
+  {
+    id: "plan-and-solve",
+    match: "make a plan first step by step before doing plan then execute solve a problem methodically break into steps then do them",
+    title: "Plan and Solve",
+    subtitle: "Plan first, then solve step by step, checking each result before it feeds the next.",
+    explain: "Makes the AI write a short plan before it starts, then carry the plan out step by step, checking each intermediate result before using it in the next step. This fixes the classic failure where the AI skips a step or drops a number halfway through a multi-part task. Good for math, calculations, multi-part requests, and anything procedural.",
+    tag: "Planning",
+    tagClass: "tag-planning",
+    blocks: [
+      { type: 'editable', text: "[DESCRIBE THE TASK OR PROBLEM]", placeholder: true },
+      { type: 'editable', text: "Do not answer yet. First, make sure you understand the problem: state it back in one sentence. Then write a short plan: the steps you will take, in order, and the variables, numbers, or facts each step depends on. Name the step most likely to go wrong. Then carry out the plan step by step, checking each intermediate result before it feeds the next step. If a step fails, fix it before moving on. Only then give the final answer.", placeholder: false },
+    ]
+  },
+  {
+    id: "step-back",
+    match: "big picture first principles of the question how should i think about this general rule best practices framework zoom out before details what matters in general",
+    title: "Step-Back Prompt",
+    subtitle: "State the general rule first, then apply it to the specific case.",
+    explain: "Makes the AI name the general rule before touching your specific case: the policy, the formula, the principle that governs questions like yours. Then it applies that rule to your case and shows how the rule leads to the answer. Stops it from pattern-matching straight to a wrong specific answer. Good for policy questions, physics-style what-happens-if questions, and anything with an underlying rule.",
+    tag: "Research",
+    tagClass: "tag-research",
+    blocks: [
+      { type: 'editable', text: "[YOUR QUESTION]", placeholder: true },
+      { type: 'editable', text: "Before answering, step back: what general rule, principle, or concept governs this kind of question? State that principle first and get it right. Then apply it to my specific case, showing how the general rule leads to the specific answer. If my case is an exception to the rule, say why.", placeholder: false },
+    ]
+  },
+  {
+    id: "self-ask",
+    match: "complicated question many parts break the question down multi part compare several things depends on many factors sub questions research question decompose",
+    title: "Self-Ask Decomposition",
+    subtitle: "Break a question into its hidden sub-questions and answer them one at a time.",
+    explain: "For questions that hide smaller questions inside them, like 'was X still alive when Y happened'. The AI often knows every individual fact but fails to chain them together. This forces it to write out each sub-question, answer each one on its own line, and only then combine them into the final answer, with the chain visible so you can spot the weak link.",
+    tag: "Research",
+    tagClass: "tag-research",
+    blocks: [
+      { type: 'editable', text: "[YOUR QUESTION]", placeholder: true },
+      { type: 'editable', text: "Before answering, decide whether this question needs follow-up questions to answer correctly. If it does, write out each follow-up question explicitly, answer each one on its own line, and only then combine those answers into the final answer. Show the chain. If any link in the chain is uncertain, flag it, because the final answer inherits that uncertainty.", placeholder: false },
+    ]
+  },
+  {
+    id: "adversarial-panel",
+    match: "review my work critique this draft feedback from multiple experts judge evaluate a plan proposal document tear it apart find weaknesses before i send it present it to a client board review",
+    title: "Adversarial Expert Panel",
+    subtitle: "Three experts with different incentives answer independently, then argue it out.",
+    explain: "Your question gets worked three times by three imagined experts with different backgrounds and different professional incentives, each answering independently before seeing the others. Then they read each other and revise or defend. You get the consensus that survived, plus every point they could not settle and which side has the better evidence. This is the best-evidenced accuracy technique in the published research. Use it for judgment calls and contested facts.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE QUESTION, CLAIM, OR DRAFT TO PRESSURE-TEST]", placeholder: true },
+      { type: 'editable', text: "Work this as three experts with different priors and different professional incentives. Each answers independently first, without seeing the others. Then each reads the other two and either revises or defends, with a reason. Report the surviving consensus, every point they could not settle, and which side has the better evidence on each. Do not average them into a bland middle.", placeholder: false },
+    ]
+  },
+  {
+    id: "independent-passes",
+    match: "solve it twice same answer consistent math calculation numbers recompute check an answer reliability run it again compare answers agreement",
+    title: "Independent Passes Check",
+    subtitle: "Solve it three times from scratch. Agreement means confidence; a split shows where the doubt lives.",
+    explain: "The AI solves your problem three separate times, from scratch, taking a genuinely different route each time, then compares the answers. If they all agree, you can trust the answer more. If they split, the split itself is the finding: it shows you exactly where the uncertainty lives. Costs a longer reply, so save it for answers that are checkable and matter.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE QUESTION OR PROBLEM]", placeholder: true },
+      { type: 'editable', text: "Solve this 3 separate times, from scratch, using a genuinely different approach or starting point each time. Do not peek at your earlier attempts. Then compare the answers. If they agree, give the answer and say so. If they disagree, that disagreement is the important finding: show where the paths split, which answer you trust most, and why.", placeholder: false },
+    ]
+  },
+  {
+    id: "branch-backtrack",
+    match: "multiple options approaches which way should i go explore alternatives compare approaches stuck dead end brainstorm different paths angles",
+    title: "Branch and Backtrack",
+    subtitle: "Three different approaches, graded. Dead ends die early. The strongest branch gets developed.",
+    explain: "Stops the AI from marrying its first idea. It sketches three genuinely different approaches, grades each one after only two steps of thinking, kills the dead ends immediately, and fully develops the strongest survivor. At the end it tells you which branches it abandoned and why, so you can see the road not taken. Use it for design choices and decisions where the first option locks you in.",
+    tag: "Strategy",
+    tagClass: "tag-strategy",
+    blocks: [
+      { type: 'editable', text: "[THE DECISION, DESIGN, OR PROBLEM]", placeholder: true },
+      { type: 'editable', text: "Do not commit to your first idea. Generate 3 distinctly different approaches. For each: sketch the next two steps, then grade it (sure win / promising / dead end) with one line of reasoning. Drop dead ends immediately, even if you already invested words in them. Develop the strongest survivor fully. At the end, say which branches you abandoned and why, so I can see the road not taken.", placeholder: false },
+    ]
+  },
+  {
+    id: "pre-mortem-quick",
+    match: "quick risk check fast before hitting send last look two minute check what would break gut check before shipping",
+    title: "Pre-Mortem in Two Sentences",
+    subtitle: "The two-minute pre-mortem. Imagine it failed, three ways, then patch the plan.",
+    explain: "The quick version of the Pre-Mortem. Bolt it onto any plan, recommendation, or answer the AI just gave you. It imagines the failure three different ways (the plan itself, the people and systems around it, and a wrong assumption), names the earliest warning sign for each, and patches the plan where the patch is cheap. Use the full Pre-Mortem Failure Autopsy when the project deserves a complete workup; use this when you have two minutes.",
+    tag: "Planning",
+    tagClass: "tag-planning",
+    blocks: [
+      { type: 'editable', text: "[YOUR PLAN OR RECOMMENDATION, OR WRITE 'YOUR PREVIOUS ANSWER']", placeholder: true },
+      { type: 'editable', text: "Assume it is six months from now and the plan above failed badly. Write the two-sentence story of what went wrong, three different ways: one where the failure came from the plan itself, one where it came from the people or systems around it, and one where something we assumed was true turned out not to be. Then, for each story, name the earliest warning sign and the one change that would have prevented it. Revise the plan with those changes if they are cheap; list them as watch-items if they are not.", placeholder: false },
+    ]
+  },
+  {
+    id: "verify-blind",
+    match: "fact check verify claims true or false check the numbers dates names statistics confirm accurate double check facts hallucination made up citations sources check an article",
+    title: "Blind Fact-Check",
+    subtitle: "Pull out every factual claim and re-verify each one blind, without looking at the original.",
+    explain: "The anti-hallucination check. It pulls every factual claim out of a draft (names, numbers, dates, quotes, citations), then re-answers each one fresh WITHOUT looking back at the original, so the wrong claim cannot contaminate the check. Wherever the fresh answer disagrees with the draft, the draft gets fixed. Paste in any text, including the AI's own last answer. Made-up citations and numbers are exactly what this catches.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE ANSWER OR DRAFT TO FACT-CHECK, OR WRITE 'YOUR PREVIOUS ANSWER']", placeholder: true },
+      { type: 'editable', text: "Fact-check the material above in three passes.\nPass 1: extract every factual claim in it: names, numbers, dates, quotes, citations, and technical statements.\nPass 2: for each claim, write a verification question, then answer each question fresh, on its own, as if you had never seen the original text. Do not look back at the original while answering.\nPass 3: compare. Where the fresh answer contradicts the original claim, the claim is wrong: fix it.\nDeliver the corrected version plus a list of what changed and what you could not verify either way.", placeholder: false },
+    ]
+  },
+  {
+    id: "rubric-grade",
+    match: "grade score quality check against requirements checklist criteria spec did it meet the brief evaluate the deliverable before submitting scorecard",
+    title: "Rubric Self-Grade",
+    subtitle: "Write the scoring rubric, grade your own work against it, fix everything below 4 of 5.",
+    explain: "Turns 'check your work' from a vibe into something specific. The AI writes a 5-criterion scoring rubric for what excellent looks like on this task, grades its own work criterion by criterion citing the exact lines that earn each score, and must fix anything below 4 out of 5 before showing you. Generic self-praise counts as a failing score, which is the clause that makes it work.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE WORK TO GRADE, OR WRITE 'YOUR PREVIOUS ANSWER']", placeholder: true },
+      { type: 'editable', text: "Write a 5-criterion rubric with weights for what an excellent version of the work above would look like. Then score the work criterion by criterion, 1 to 5, citing the exact line or section that earns each score. Generic praise counts as a failing score. Fix everything scoring below 4 out of 5, then show me the final version with the final scores and what changed.", placeholder: false },
+    ]
+  },
+  {
+    id: "self-refine",
+    match: "improve polish revise this draft make it better tighten rewrite iterate another pass cleaner sharper upgrade quality",
+    title: "Self-Refine Loop",
+    subtitle: "Draft, critique like a harsh reviewer, rewrite. You only see the fixed version plus what changed.",
+    explain: "Three rounds in one reply: draft it, critique the draft as a demanding expert reviewer with specific actionable flaws, then rewrite it fixing every flaw on the list. You only see the final version plus the flaw list, so you can judge whether the critique was real. One warning from the research: this works well on strong models and gets lazy on weak ones, so if the flaw list looks like compliments, the loop did not really run.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE TASK]", placeholder: true },
+      { type: 'editable', text: "Do this in three rounds, all inside one reply.\nRound 1: produce your best version.\nRound 2: critique it as a demanding expert reviewer. List specific, actionable flaws, not compliments. If a flaw is real, name the line it lives on.\nRound 3: rewrite it, fixing every flaw on the list.\nShow me only the Round 3 version plus the flaw list, so I can see what got fixed. If Round 2 finds nothing real to fix, say so instead of inventing problems.", placeholder: false },
+    ]
+  },
+  {
+    id: "answer-from-sources",
+    match: "summarize this document file pdf contract policy read what does this say answer only from my files notes quote the source grounded no guessing no outside info extract from attachment stick to the text",
+    title: "Answer From Sources Only",
+    subtitle: "Answer only from the material provided. Gaps get named, not filled from memory.",
+    explain: "Locks the AI to the material you gave it. Every claim in the answer must quote or point to a specific passage in your material, and anything the material does not cover gets 'the provided material does not cover this' instead of a confident guess from the AI's memory. Use it whenever you attach files or paste source text and want the answer to come from THOSE, not from the internet's average opinion.",
+    tag: "Research",
+    tagClass: "tag-research",
+    blocks: [
+      { type: 'editable', text: "[PASTE YOUR SOURCE MATERIAL OR ATTACH YOUR FILES, THEN WRITE YOUR QUESTION]", placeholder: true },
+      { type: 'editable', text: "Answer using only the material I provided above. Every claim in your answer must trace to a specific place in that material: quote or cite the exact passage next to the claim. If the material does not contain the answer, say 'the provided material does not cover this' rather than filling the gap from memory. Keep outside knowledge out unless I explicitly ask for it, and if I do, label it clearly as coming from outside the material.", placeholder: false },
+    ]
+  },
+  {
+    id: "confidence-check",
+    match: "how sure are you confidence level certainty can i trust this answer might be wrong flag uncertainty honest about doubt calibrate",
+    title: "Confidence Check",
+    subtitle: "Sort known facts from guesses before answering, then state confidence in words, not percentages.",
+    explain: "Makes the AI separate what it actually knows from what it is guessing BEFORE it answers, then state its confidence in words: what would have to be wrong for the answer to be wrong, and which single fact the answer leans on hardest. Kills the false certainty in confident-sounding answers. The research behind it found self-reported percentage scores are badly miscalibrated, which is why this asks for words instead. Use it on facts you plan to act on.",
+    tag: "Verification",
+    tagClass: "tag-verify",
+    blocks: [
+      { type: 'editable', text: "[THE QUESTION, OR WRITE 'RE-EXAMINE YOUR PREVIOUS ANSWER']", placeholder: true },
+      { type: 'editable', text: "Before answering, list the facts you actually know that bear on this, each labeled: certain, probably true, or unsure. Then reflect on that list before answering: what do the reliable facts support, and where are you filling gaps? Give your answer, then state your confidence in words, not a percentage: what would have to be wrong for the answer to be wrong, and which single fact on your list is doing the most work. If the unsure items outweigh the certain ones, say 'low confidence' plainly and tell me what would settle it.", placeholder: false },
+    ]
+  },
+  {
+    id: "claude-design-audit",
+    match: "design tweak layout reference guide claude design canvas pages spacing fonts text sizes images cohesive consistent look polish visual audit formatting alignment boxes whole document sweep aesthetic",
+  
