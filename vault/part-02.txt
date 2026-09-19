@@ -1,4 +1,7 @@
-do when it broke.', placeholder: false },
+and any changes made right before]\n- Frequency: [every time / intermittent / only under specific conditions]\n- What I\'ve already tried: [steps taken and their results]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— PLAIN-ENGLISH EXPLANATION' },
+      { type: 'editable', text: 'Tell me what this error actually means in plain language — not the textbook definition, but what is happening in my specific system right now. What component failed, why, and what it was trying to do when it broke.', placeholder: false },
       { type: 'step', label: 'STEP 2', title: '— ROOT CAUSE DIAGNOSIS' },
       { type: 'editable', text: 'Based on the error and my context, identify the most likely cause with your reasoning. Then list 2–3 alternative causes in order of probability. For each, explain what evidence would confirm or rule it out.', placeholder: false },
       { type: 'step', label: 'STEP 3', title: '— FIX INSTRUCTIONS' },
@@ -8,7 +11,7 @@ do when it broke.', placeholder: false },
     ]
   },
 
-  // ── 6. FIRST PRINCIPLES REBUILD ────────────────────────
+  // ── 6. FIRST PRINCIPLES REBUILD ----
   {
     id: 'first-principles-rebuild',
     match: "rethink from scratch why do we do it this way rebuild redesign start over fundamentals question everything blank slate",
@@ -32,7 +35,7 @@ do when it broke.', placeholder: false },
     ]
   },
 
-  // ── 7. PRE-MORTEM FAILURE AUTOPSY ────────────────────
+  // ── 7. PRE-MORTEM FAILURE AUTOPSY ----
   {
     id: 'pre-mortem',
     match: "imagine the project failed what went wrong risks before launch kickoff big change prevention safeguards risk plan autopsy in advance",
@@ -56,7 +59,7 @@ do when it broke.', placeholder: false },
     ]
   },
 
-  // ── 8. HIGH-LEVERAGE AUDIT ───────────────────────────────
+  // ── 8. HIGH-LEVERAGE AUDIT ----
   {
     id: 'high-leverage-audit',
     match: "priorities what should i focus on time management eighty twenty 80 20 biggest impact overwhelmed too much on my plate what matters most this week leverage",
@@ -83,7 +86,7 @@ do when it broke.', placeholder: false },
     ]
   },
 
-  // ── 9. ASSUMPTION AUDIT ──────────────────────────────────
+  // ── 9. ASSUMPTION AUDIT ----
   {
     id: 'assumption-audit',
     match: "assumptions taking for granted blind spots what am i assuming hidden beliefs premises unquestioned defaults challenge the basis",
@@ -107,7 +110,7 @@ do when it broke.', placeholder: false },
     ]
   },
 
-  // ── 10. WORKFLOW OPTIMIZER & SOP BUILDER ───────────
+  // ── 10. WORKFLOW OPTIMIZER & SOP BUILDER ----
   {
     id: 'workflow-optimizer',
     match: "document my process sop standard operating procedure streamline steps repeatable checklist template optimize a workflow handoff onboarding delegate",
@@ -153,10 +156,4 @@ do when it broke.', placeholder: false },
       { type: 'step', label: "STEP 1", title: "— RESTATE" },
       { type: 'editable', text: "Tell me what you understand the task to be, what the output should look like, and who or what it is for. Be specific enough that I can catch a misunderstanding.", placeholder: false },
       { type: 'step', label: "STEP 2", title: "— UNKNOWNS INVENTORY" },
-      { type: 'editable', text: "List everything you do not actually know that could change the output, including the things I probably assume are obvious. For each unknown, rate the impact if you guess wrong: CRITICAL (the whole deliverable is wrong), MODERATE (a section needs redoing), or MINOR (a detail is off). At minimum cover: the real objective behind the request, the audience, format and length, constraints I have not stated, what already exists that you should match or not duplicate, what is explicitly out of scope, and how I will judge whether it is good.", placeholder: false },
-      { type: 'step', label: "STEP 3", title: "— ASK" },
-      { type: 'editable', text: "Ask me only the CRITICAL and MODERATE questions, maximum 7 per round, ordered most important first. Number them and tell me why each one matters. For every question, give me your best-guess default so I can reply 'use your defaults' instead of answering each one. Do not ask me anything you can determine yourself from the materials I gave you or from your own research. Do not ask MINOR questions at all. State your assumption instead and move on.", placeholder: false },
-      { type: 'step', label: "STEP 4", title: "— LOOP" },
-      { type: 'editable', text: "After I answer, update your understanding and repeat Steps 2 and 3 only if CRITICAL or MODERATE unknowns remain. Otherwise stop asking. Do not pad with further questions once the high-impact list is empty, and do not tell me you are 'confident' as a substitute for showing me that the list is empty.", placeholder: false },
-      { type: 'step', label: "STEP 5", title: "— READINESS CHECK" },
-      { type: 'editable', text: "Whe
+      { type: 'editable', text: "List everything you do not actually know that could change the output, including the things I probably assume are obvious. For each unknown, rate the impact if you guess wrong: CRITICAL (the whole deliverable is wrong), MODERATE (a se
