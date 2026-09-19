@@ -1,0 +1,239 @@
+ton class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</button>
+      </div>
+
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Search prompts..." autocomplete="off" />
+        <span class="search-icon">&#9906;</span>
+      </div>
+
+      <nav class="prompt-nav" id="promptNav">
+        <!-- Populated by JS -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-reset" id="resetAllBtn" title="Reset all prompts to defaults">&#8635; Reset All</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main" id="main">
+
+      <header class="top-bar">
+        <button class="hamburger" id="hamburger" title="Open sidebar">&#9776;</button>
+        <div class="top-bar-title" id="topBarTitle">Select a prompt</div>
+        <div class="top-bar-actions">
+          <span class="save-indicator" id="saveIndicator"></span>
+          <button class="btn-copy-all" id="copyAllBtn" title="Copy full prompt to clipboard">
+            <span class="copy-icon">&#10064;</span> Copy Prompt
+          </button>
+        </div>
+      </header>
+
+      <!-- WELCOME SCREEN -->
+      <section class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-inner">
+          <div class="welcome-diamond">&#9670;</div>
+          <h1>Prompt Vault</h1>
+          <p id="welcomeIntro"></p>
+          <div class="ask-section">
+            <label class="ask-label" for="askInput">What do you want to do?</label>
+            <textarea id="askInput" class="ask-input" rows="2" placeholder='Describe it simply, e.g. "double check this before I send it" or "why does my formula keep breaking"'></textarea>
+            <div class="ask-results" id="askResults"></div>
+          </div>
+          <div class="welcome-grid" id="welcomeGrid"></div>
+        </div>
+      </section>
+
+      <!-- PROMPT DETAIL VIEW -->
+      <section class="prompt-view" id="promptView" style="display:none;">
+        <div class="prompt-meta">
+          <span class="prompt-tag" id="promptTag"></span>
+          <h2 class="prompt-title" id="promptTitle"></h2>
+          <p class="prompt-subtitle" id="promptSubtitle"></p>
+          <div class="explain-box" id="promptExplain" style="display:none;"></div>
+        </div>
+
+        <div class="editor-area" id="editorArea">
+          <!-- Dynamically rendered prompt blocks -->
+        </div>
+
+        <div class="prompt-actions-bar">
+          <button class="btn-reset-single" id="resetSingleBtn">&#8635; Reset to Default</button>
+          <button class="btn-copy-final" id="copyFinalBtn">
+            <span>&#10064;</span> Copy Full Prompt
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- RESET CONFIRM MODAL -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+      <div class="modal">
+        <h3>Reset this prompt?</h3>
+        <p>All your edits will be lost and the prompt will return to its default text.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="modalCancel">Cancel</button>
+          <button class="btn-confirm" id="modalConfirm">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+/* ============================================================
+   PROMPT VAULT — script.js
+   All 11 prompts, localStorage persistence, copy, search, reset
+   ============================================================ */
+
+// ── DATA ─────────────────────────────────────────────────────
+// Each prompt is an array of "blocks":
+//   { type: 'static', text: '...' }           — read-only intro text
+//   { type: 'step', label: 'STEP 1', title: '— TITLE' }  — step header (read-only)
+//   { type: 'editable', text: '...', placeholder: true/false }  — editable textarea
+//   { type: 'divider' }                        — visual gap
+
+const PROMPTS = [
+  // ── 0. DEVIL'S ADVOCATE ──────────────────────────────────
+  {
+    id: 'devils-advocate',
+    match: "quick answer gut check second opinion is this a good idea should i challenge my thinking poke holes disagree argue counterargument sanity check opinion advice recommendation everyday question stress test my idea",
+    explain: "You give it one topic, question, or decision. It researches, proposes an answer, then attacks its own answer like its strongest critic, and finally gives you the bottom line in plain words. Use it any time you want more than a first-draft answer. One blank to fill. Its heavy-duty cousin is Research, Red Team, Re-Research in this same group: use Devil's Advocate for everyday questions, and the heavy version when the answer feeds a decision with real money or time on the line.",
+    title: "Devil's Advocate",
+    subtitle: "Deep research + built-in critic. Your general-purpose validator for any topic, question, or decision.",
+    tag: 'Foundation',
+    tagClass: 'tag-foundation',
+    blocks: [
+      { type: 'static', text: 'Do a deep, thorough research on the following topic, question, or need.' },
+      { type: 'editable', text: '[TOPIC / QUESTION / NEED]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— DEEP RESEARCH' },
+      { type: 'editable', text: 'Investigate the topic thoroughly. Cover key facts, context, relevant data, expert perspectives, and anything critical to understanding the full picture.', placeholder: false },
+      { type: 'step', label: 'STEP 2', title: '— PROPOSED SOLUTION' },
+      { type: 'editable', text: 'Based on the research, give me a clear, actionable solution or recommendation.', placeholder: false },
+      { type: 'step', label: 'STEP 3', title: "— DEVIL'S ADVOCATE" },
+      { type: 'editable', text: "Now argue against your own solution. Attack it as if you were its strongest critic. Point out flaws, risks, blind spots, missing context, and situations where it could fail or backfire.", placeholder: false },
+      { type: 'step', label: 'STEP 4', title: '— FINAL VERDICT (SIMPLE VERSION)' },
+      { type: 'editable', text: "After weighing the research and the Devil's Advocate critique, give me your FINAL answer in the simplest, most direct way possible — as if explaining it to someone with zero background on the topic. Use plain language, short sentences, and skip the jargon. This should be the \"bottom line\" takeaway — quick to read, easy to act on.", placeholder: false },
+    ]
+  },
+
+  // ── 1. AUTOMATION STRESS TEST ────────────────────────────
+  {
+    id: 'automation-stress-test',
+    match: "automation zap make workflow bot agent scheduled task breaks edge cases what could go wrong test scenarios stress test failure modes weird inputs",
+    explain: "Paste in any automation, script, or workflow before you switch it on. It explains what your logic actually does, not what you meant it to do, hunts for ways it can misfire, rates how bad each failure would be, then hands back a hardened version with every change explained. Use it before deploying anything that runs unattended. One blank: the automation itself. Its cousin is the Deep Prep & Triple Verify Executor: use the Executor when the AI is doing new work for you, and this stress test when you already have a finished automation to attack.",
+    title: 'Automation Stress Test',
+    subtitle: 'Before you flip the switch on any automation, run it through this. Finds edge cases, conflicts, and failure modes you didn\'t think of.',
+    tag: 'Automation',
+    tagClass: 'tag-automation',
+    blocks: [
+      { type: 'static', text: 'Review the following automation/workflow/script for reliability and safety before I deploy it.' },
+      { type: 'editable', text: '[PASTE YOUR AUTOMATION, YAML, SCRIPT, OR WORKFLOW DESCRIPTION HERE]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— LOGIC AUDIT' },
+      { type: 'editable', text: 'Read through the automation exactly as written. Explain back to me what it actually does (not what I intended) — step by step, trigger by trigger, condition by condition. Flag any gaps between what I described wanting and what the logic will actually execute.', placeholder: false },
+      { type: 'step', label: 'STEP 2', title: '— EDGE CASE & CONFLICT FINDER' },
+      { type: 'editable', text: 'Identify every scenario where this automation could behave unexpectedly, fire at the wrong time, conflict with other automations, or fail silently. Think about: startup/restart states, overlapping triggers, missing conditions, race conditions, devices being unavailable, and user actions that could interrupt the flow.', placeholder: false },
+      { type: 'step', label: 'STEP 3', title: '— FAILURE MODE ANALYSIS' },
+      { type: 'editable', text: 'For each issue found, describe: what specifically goes wrong, when it would happen, and how bad the impact would be (minor annoyance vs. safety risk vs. system-breaking).', placeholder: false },
+      { type: 'step', label: 'STEP 4', title: '— HARDENED VERSION' },
+      { type: 'editable', text: 'Rewrite or revise the automation with all identified issues fixed. Explain every change you made and why. If a complete rewrite isn\'t needed, provide targeted patches with clear before/after comparisons.', placeholder: false },
+    ]
+  },
+
+  // ── 2. ROOT CAUSE EXCAVATOR ──────────────────────────────
+  {
+    id: 'root-cause-excavator',
+    match: "why does this keep happening recurring problem root cause underlying issue keeps breaking failing repeat failure pattern dig deeper past the symptom five whys",
+    explain: "For problems that keep coming back after you fix them. It maps every symptom, asks why five levels deep, gives you an ordered checklist to prove which cause is the real one, then the fix plus what to change so it never returns. Two blanks: the problem and your setup details.",
+    title: 'Root Cause Excavator',
+    subtitle: 'Stop treating symptoms. Digs until it finds the actual source of the problem — not just the first thing that looks broken.',
+    tag: 'Troubleshooting',
+    tagClass: 'tag-troubleshoot',
+    blocks: [
+      { type: 'static', text: 'I need a deep root cause analysis on the following problem. Do not give me surface-level fixes.' },
+      { type: 'step', label: 'THE PROBLEM', title: '' },
+      { type: 'editable', text: '[DESCRIBE THE ISSUE IN DETAIL — what happens, when it happens, what you\'ve already tried, any error messages]', placeholder: true },
+      { type: 'step', label: 'ENVIRONMENT', title: '' },
+      { type: 'editable', text: '[OS / software version / device / relevant context]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— SYMPTOM MAP' },
+      { type: 'editable', text: 'List every symptom I\'ve described. Then identify which are root causes vs. downstream effects. Draw the chain: what triggers what. If there are multiple possible chains, list all of them.', placeholder: false },
+      { type: 'step', label: 'STEP 2', title: '— 5 WHYS DRILL' },
+      { type: 'editable', text: 'Take the most likely root cause and apply the 5 Whys technique — ask "why" five times in succession, each time going one level deeper. Show the full chain. Then do the same for the second most likely root cause.', placeholder: false },
+      { type: 'step', label: 'STEP 3', title: '— DIAGNOSIS PLAN' },
+      { type: 'editable', text: 'Give me a specific, ordered sequence of diagnostic steps to confirm which root cause is actually responsible. For each step: what to check, what tool or command to use, and what the result means (both "this confirms it" and "this rules it out").', placeholder: false },
+      { type: 'step', label: 'STEP 4', title: '— FIX + PREVENTION' },
+      { type: 'editable', text: 'Once the root cause is confirmed, give me: (a) the exact fix with step-by-step instructions, (b) how to verify the fix actually worked — not just that the symptom disappeared, and (c) what to change permanently so this doesn\'t come back.', placeholder: false },
+    ]
+  },
+
+  // ── 3. INVERSION AUDIT ───────────────────────────────────
+  {
+    id: 'inversion-audit',
+    match: "how would this fail on purpose guarantee failure what would ruin this avoid mistakes think backwards flip it what not to do",
+    explain: "Backwards on purpose. Instead of asking how to succeed, it asks how you would guarantee failure, then checks your actual plan against that failure list. Surprisingly good at finding risks you missed because you were only looking forward. Use it on goals, plans, and big decisions. One blank.",
+    title: 'Inversion Audit',
+    subtitle: 'Inspired by Charlie Munger: "Invert, always invert." Find every way your plan fails — then eliminate those paths.',
+    tag: 'Strategy',
+    tagClass: 'tag-strategy',
+    blocks: [
+      { type: 'static', text: 'I want to use inversion thinking to pressure-test the following goal, plan, or decision.' },
+      { type: 'editable', text: '[DESCRIBE YOUR GOAL, PLAN, OR DECISION IN DETAIL]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— INVERSION: HOW TO GUARANTEE FAILURE' },
+      { type: 'editable', text: 'Flip the goal completely. Instead of "how do I succeed at this," answer: "If I wanted this to fail spectacularly, what would I do?" List every action, habit, assumption, or omission that would guarantee the worst possible outcome. Be specific and ruthless — not generic.', placeholder: false },
+      { type: 'step', label: 'STEP 2', title: '— MIRROR ANALYSIS' },
+      { type: 'editable', text: 'Now look at my actual plan and compare it against the failure list from Step 1. Identify every place where my current approach is already doing — or risks doing — something from that failure list. These are my real danger zones.', placeholder: false },
+      { type: 'step', label: 'STEP 3', title: '— BLIND SPOT SCAN' },
+      { type: 'editable', text: 'What am I not seeing? Identify the assumptions I\'m making that I haven\'t questioned, the risks I\'m probably underestimating because they feel unlikely, and the things I\'m likely to neglect once I get busy executing.', placeholder: false },
+      { type: 'step', label: 'STEP 4', title: '— HARDENED PLAN' },
+      { type: 'editable', text: 'Based on everything above, give me a revised version of my plan or a specific list of guardrails to add. Focus on eliminating the failure modes, not just adding more steps. What should I stop doing, start doing, or build in as a non-negotiable safeguard?', placeholder: false },
+    ]
+  },
+
+  // ── 4. SECOND-ORDER CONSEQUENCES MAP ────────────────────
+  {
+    id: 'second-order-map',
+    match: "consequences ripple effects downstream impact and then what long term side effects knock on effects of a decision unintended",
+    explain: "For decisions with ripple effects. It traces what happens right away, then what happens because of that, then what you are locked into at 30, 90, and 180 days, and ends with a clear yes-or-no verdict. Use it before changes that are hard to undo. One blank.",
+    title: 'Second-Order Consequences Map',
+    subtitle: 'Most people only see the first domino. Trace the full chain — what happens, then what happens because of that, then what happens because of that.',
+    tag: 'Strategy',
+    tagClass: 'tag-strategy',
+    blocks: [
+      { type: 'static', text: 'I need to map the full consequences of the following decision or change before I commit to it.' },
+      { type: 'editable', text: '[DESCRIBE THE DECISION, CHANGE, OR ACTION YOU\'RE CONSIDERING]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— FIRST-ORDER EFFECTS' },
+      { type: 'editable', text: 'What are the direct, immediate results of this decision? List everything that changes within the first 24–72 hours. Include both intended outcomes and likely side effects — even small ones.', placeholder: false },
+      { type: 'step', label: 'STEP 2', title: '— SECOND-ORDER EFFECTS' },
+      { type: 'editable', text: 'For each first-order effect, ask: "And then what?" What does that trigger, enable, or prevent? These are the effects of the effects. Pay special attention to: unintended dependencies, things that will now break or behave differently, and new problems created by solving the original one.', placeholder: false },
+      { type: 'step', label: 'STEP 3', title: '— THIRD-ORDER & LONG-TERM EFFECTS' },
+      { type: 'editable', text: 'Project out 30, 90, and 180 days. What patterns or compounding effects emerge over time? What will I have locked myself into? What will become harder to undo? What new problems will I be dealing with that don\'t exist yet?', placeholder: false },
+      { type: 'step', label: 'STEP 4', title: '— DECISION VERDICT' },
+      { type: 'editable', text: 'Weigh everything. Is the original decision still the right move? If yes, what guardrails or reversibility mechanisms should I build in? If no, what\'s the better alternative? Give me a clear recommendation — not a "it depends."', placeholder: false },
+    ]
+  },
+
+  // ── 5. TECHNICAL ERROR DECODER ───────────────────────────
+  {
+    id: 'technical-error-decoder',
+    match: "error message formula broken excel google sheets code script bug crash not working wont work troubleshoot fix explain this error debug what went wrong technical",
+    explain: "Paste any cryptic error message. You get what the error actually means in plain words, the most likely cause with backups, exact copy-paste fix steps, and how to keep it from coming back. Two blanks: the full error and your context.",
+    title: 'Technical Error Decoder',
+    subtitle: 'Paste any error message. Get a plain-English explanation, diagnosis, fix, and prevention plan — in that order.',
+    tag: 'Technical',
+    tagClass: 'tag-technical',
+    blocks: [
+      { type: 'static', text: 'Help me fully understand and resolve the following technical error.' },
+      { type: 'step', label: 'ERROR MESSAGE / LOG ENTRY', title: '' },
+      { type: 'editable', text: '[PASTE THE COMPLETE ERROR — include error codes, file paths, stack traces, event IDs, and any surrounding log context]', placeholder: true },
+      { type: 'step', label: 'CONTEXT', title: '' },
+      { type: 'editable', text: '- What I was doing when it occurred: [exact action]\n- Software/system: [name and version]\n- Operating system: [OS and version]\n- When it started: [first occurrence and any changes made right before]\n- Frequency: [every time / intermittent / only under specific conditions]\n- What I\'ve already tried: [steps taken and their results]', placeholder: true },
+      { type: 'static', text: 'Follow this exact 4-step process, and label each step clearly:' },
+      { type: 'step', label: 'STEP 1', title: '— PLAIN-ENGLISH EXPLANATION' },
+      { type: 'editable', text: 'Tell me what this error actually means in plain language — not the textbook definition, but what is happening in my specific system right now. What component failed, why, and what it was trying to 
